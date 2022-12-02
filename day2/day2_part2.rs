@@ -1,6 +1,6 @@
 use std::fs;
 
-/* Thanks Mr. russriguez */
+/* Thanks Mr. russriguez, https://github.com/RussellWaite */
 
 fn compute_score(contents: &String, choice: bool) -> u32 {
     contents.lines().map(|line|{
