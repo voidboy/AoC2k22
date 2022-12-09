@@ -41,7 +41,12 @@ fn fix_knots(knots: &mut Vec<Pos>, visit: &mut HashSet<Pos>) {
                 // DOWN
                 knots[i].1 -= 1;
             }
-            knots[i].0 = knots[i - 1].0;
+            if knots[i - 1].0 > knots[i].0 {
+                knots[i].0 += 1;
+            }
+            else if knots[i - 1].0 < knots[i].0 {
+                knots[i].0 -= 1;
+            }
         }
         if knots[i - 1].0.abs_diff(knots[i].0) == 2 {
             if knots[i - 1].0 > knots[i].0 {
@@ -51,7 +56,12 @@ fn fix_knots(knots: &mut Vec<Pos>, visit: &mut HashSet<Pos>) {
                 // LEFT
                 knots[i].0 -= 1;
             }
-            knots[i].1 = knots[i - 1].1;
+            if knots[i - 1].1 > knots[i].1 {
+                knots[i].1 += 1;
+            }
+            else if knots[i - 1].1 < knots[i].1 {
+                knots[i].1 -= 1;
+            }
         }
         if i == knots.len() - 1 {
             visit.insert(knots[i]);
