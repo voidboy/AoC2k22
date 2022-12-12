@@ -1,0 +1,19 @@
+*** Find the shortest path ***
+
+Sabqponm
+abcryxxl
+accszExk
+acctuvwj
+abdefghi
+
+Start @ S
+End   @ E
+
+each moves can change constraints 
+
+ex: 
+    * moving to a give access to [a,b]
+    * moving to b give access to [a,b,c]
+    * moving to c give access to [a,b,c,d]
+
+moving to letter N gives access to range [from 'a' to N to (N + 1)]
