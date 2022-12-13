@@ -3,6 +3,9 @@ use std::iter::zip;
 
 /*
     Part. I : 6225 too High
+              6191 too High
+              6072 too Loww
+              5780 too Loww
 */
 
 fn split_packet(packet: &str) -> Vec<&str> {
@@ -20,15 +23,15 @@ fn split_packet(packet: &str) -> Vec<&str> {
             b']' => {
                 square_bracket_level -= 1;
                 if square_bracket_level == 0 {
-                    // skip empty strings 
-                    if last != i { 
+                    // skip empty strings
+                    if last != i {
                         values.push(&packet[last..i]);
                     }
                 }
             }
             b',' => {
                 if square_bracket_level == 1 {
-                    // skip empty strings 
+                    // skip empty strings
                     if last != i {
                         values.push(&packet[last..i]);
                     }
@@ -54,12 +57,15 @@ fn compare_packets(
             // CASE 1 : If both values are integers
             (1, 1) => {
                 // left is lower than right, inputs in right order
-                if lvalue.as_bytes()[0] < rvalue.as_bytes()[0] {
+                let l = lvalue.as_bytes()[0];
+                let r = rvalue.as_bytes()[0];
+                println!("CASE 1 COMPARING {} AND {}", l as char, r as char);
+                if  l < r {
                     //println!("OK");
                     return i + 1;
                 }
                 // left is higher than right, inputs NOT in right order
-                else if lvalue.as_bytes()[0] > rvalue.as_bytes()[0] {
+                else if l > r {
                     //println!("KO");
                     return 0;
                 }
@@ -70,15 +76,26 @@ fn compare_packets(
             }
             // CASE 2 : If both values are lists
             (2.., 2..) => {
-                if lvalue == rvalue { 
-                    continue ;
+                if lvalue == rvalue {
+                    continue;
                 } else {
                     return compare_packets(&split_packet(lvalue), &split_packet(rvalue), i);
                 }
             }
             // CASE 3 : If exactly one value is an integer
             (_, 1) => {
-                if lvalue.as_bytes()[1] < rvalue.as_bytes()[0] {
+                let l = match lvalue
+                    .as_bytes()
+                    .iter()
+                    .filter(|c| *c >= &b'0' && *c <= &b'9')
+                    .take(1)
+                    .next() {
+                        Some(c) => c,
+                        None    => return i + 1
+                    };
+                let r = rvalue.as_bytes()[0];
+                println!("CASE 2 COMPARING {} AND {}", *l as char, r as char);
+                if *l < r {
                     return i + 1;
                 // left > right or right run out of values
                 } else {
@@ -86,7 +103,18 @@ fn compare_packets(
                 }
             }
             (1, _) => {
-                if lvalue.as_bytes()[0] > rvalue.as_bytes()[1] {
+                let l = lvalue.as_bytes()[0];
+                let r = match rvalue
+                    .as_bytes()
+                    .iter()
+                    .filter(|c| *c >= &b'0' && *c <= &b'9')
+                    .take(1)
+                    .next() {
+                        Some(c) => c,
+                        None    => return 0
+                    };
+                println!("CASE 3 COMPARING {} AND {}", l as char, *r as char);
+                if l > *r {
                     return 0;
                 // left < right or left run out of values
                 } else {
@@ -106,7 +134,7 @@ fn compare_packets(
 }
 
 fn main() {
-    let contents = fs::read_to_string("my_input").expect("Cannot read the file");
+    let contents = fs::read_to_string("input").expect("Cannot read the file");
 
     let part1: usize = contents
         .split("\n\n")
