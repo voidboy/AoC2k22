@@ -31,9 +31,13 @@ const SIMULATION_TIME:usize = 26;
 
     We are going to generate ALL combinations and pick the best one.
 
+
+    Part I : 1871
+    Part II: 
+
 */
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 struct Valve<'a> {
     name: &'a str,
     flow_rate: usize,
@@ -61,7 +65,6 @@ fn best_valve_to_valve_path(from: &str, to: &str, valves_indx: &HashMap<&str, Va
     if to_valve.leads_to.contains(&from) {
         1
     } else {
-        let from_valve = valves_indx.get(from).unwrap();
         let mut frontier = vec![];
         frontier.push(from);
         let mut cames_from: HashMap<&str, Option<&str>> = HashMap::new();
@@ -95,7 +98,6 @@ fn simulate_path(path: &Vec<&Valve>, valves_indx: &HashMap<&str, Valve>) -> usiz
     let mut triggers: Vec<usize> = vec![];
     for valve in path {
         if let Some(last) = last_valve {
-            // cost of the move(s} + 1 for opening the valve
             cost += best_valve_to_valve_path(last.name, valve.name, valves_indx) + 1;
             triggers.push(cost);
         }
@@ -108,7 +110,6 @@ fn simulate_path(path: &Vec<&Valve>, valves_indx: &HashMap<&str, Valve>) -> usiz
     for tick in 0..=SIMULATION_TIME {
         total_pressure += pressure;
         if tick > 0 && trigger_index < triggers.len() && tick % triggers[trigger_index] == 0 {
-            // trigger_index + 1, skip entrypoint
             pressure += path[trigger_index + 1].flow_rate;
             trigger_index += 1
         }
@@ -116,14 +117,24 @@ fn simulate_path(path: &Vec<&Valve>, valves_indx: &HashMap<&str, Valve>) -> usiz
     total_pressure
 }
 
+fn is_compatible(path: &Vec<&Valve>, other: &Vec<&Valve>) -> bool {
+    for valve in path.iter().skip(1) {
+        if other.contains(valve) {
+            return false;
+        }
+    }
+    return true; 
+}
+
 fn generate_best_combination(
     effective_valves: &Vec<&Valve>,
     valves_indx: &HashMap<&str, Valve>,
 ) -> usize {
+    let mut aurelien_path: Option<(Vec<&Valve>, usize)> = None;
+    let mut elephant_path: Option<(Vec<&Valve>, usize)> = None;
     for combination_size in 2..=7 {
         let mut combination: Vec<usize> = vec![];
         let mut index: usize = usize::MIN;
-        let mut max_pressure: usize = usize::MIN;
         for _ in 0..combination_size {
             combination.push(usize::MAX);
         }
@@ -136,7 +147,6 @@ fn generate_best_combination(
                     if index < combination_size - 1 {
                         index += 1;
                     } else {
-                        //println!("Combination: {:?}", combination);
                         let mut path: Vec<&Valve> = vec![];
                         // ugly, adjust your starting point there
                         path.push(valves_indx.get("AA").unwrap());
@@ -144,8 +154,28 @@ fn generate_best_combination(
                             path.push(effective_valves[*i]);
                         }
                         let this_pressure = simulate_path(&path, valves_indx);
-                        if this_pressure > max_pressure {
-                            max_pressure = this_pressure;
+                        if elephant_path.is_none() {
+                            elephant_path = Some((path, this_pressure));
+                        }
+                        else if aurelien_path.is_none() {
+                            let Some(ref mut epath) = elephant_path else { todo!() };
+                            if is_compatible(&path, &epath.0) {
+                                aurelien_path = Some((path, this_pressure));
+                            }
+                        }
+                        else {
+                            let Some(ref mut epath) = elephant_path else { todo!() };
+                            let Some(ref mut mpath) = aurelien_path else { todo!() };
+                            if epath.1 < this_pressure && is_compatible(&path, &mpath.0) {
+                                epath.0 = path;
+                                epath.1 = this_pressure;
+                                println!("best: {}", epath.1 + mpath.1);
+                            }
+                            else if mpath.1 < this_pressure && is_compatible(&path, &epath.0) {
+                                mpath.0 = path;
+                                mpath.1 = this_pressure;
+                                println!("best: {}", epath.1 + mpath.1);
+                            }
                         }
                         if is_last_combination(&combination, effective_valves, combination_size) {
                             break 'outer;
@@ -161,7 +191,7 @@ fn generate_best_combination(
             }
         }
     }
-    max_pressure
+    elephant_path.unwrap().1 + aurelien_path.unwrap().1
 }
 
 fn main() {
@@ -195,14 +225,7 @@ fn main() {
             effective_valves.push(valve);
         }
     }
-    let mut max_pressure: usize = usize::MIN;
-    for combination_size in 2..=10 {
-        let this_pressure =
-            generate_best_combination(&effective_valves, &valves_indx, combination_size);
-        if this_pressure > max_pressure {
-            max_pressure = this_pressure;
-            println!("New max_pressure found: {max_pressure}");
-        }
-    }
+    let max_pressure: usize;
+    max_pressure = generate_best_combination(&effective_valves, &valves_indx);
     println!("Part. I : {}", max_pressure);
 }
