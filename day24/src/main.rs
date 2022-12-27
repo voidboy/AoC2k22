@@ -211,20 +211,21 @@ fn main() {
             for (key, value) in expedition.tried_path.iter() {
                 to_test.push((key.clone(), *value));
             }
-            if depth == 10 {
-                println!("{:?}", expedition.tried_path);
-                break 'main;
-            }
             expedition.tried_path.clear();
+            let mut already_tested: Vec<Point> = vec![];
             for (key, value) in to_test.iter() {
-                if expedition.find_path(*value, depth, key.to_owned() + "N")
-                    || expedition.find_path(*value, depth, key.to_owned() + "S")
-                    || expedition.find_path(*value, depth, key.to_owned() + "E")
-                    || expedition.find_path(*value, depth, key.to_owned() + "W")
-                    || expedition.find_path(*value, depth, key.to_owned() + "_")
-                {
-                    println!("FOUND path with {} moves", depth + 1);
-                    break 'main;
+                if !already_tested.contains(value) {
+                    if expedition.find_path(*value, depth, key.to_owned() + "N")
+                        || expedition.find_path(*value, depth, key.to_owned() + "S")
+                        || expedition.find_path(*value, depth, key.to_owned() + "E")
+                        || expedition.find_path(*value, depth, key.to_owned() + "W")
+                        || expedition.find_path(*value, depth, key.to_owned() + "_")
+                    {
+                        println!("FOUND path with {} moves", depth + 1);
+                        break 'main;
+                    } else {
+                        already_tested.push(*value);
+                    }
                 }
             }
         } else {
